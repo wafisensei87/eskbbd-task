@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>eSKBBD TASK</title>
+<meta name="description" content="Sistem pemberatan tugas guru: Kurikulum, HEM dan Kokurikulum.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23123f30'/%3E%3Cpath d='M8 22h4V14H8zm6 0h4V9h-4zm6 0h4V17h-4z' fill='%23ffd27a'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font-size:14px}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<style>
+/* Susun atur: bar atas hijau papan tulis + tab; ringkasan dahulu (carta bar bertindan setiap guru), butiran di tab lain. */
+:root{
+  --bg:#f2f5f2; --surface:#ffffff; --ink:#15231d; --muted:#5b6b63; --line:#d9e0db;
+  --accent:#1c6a4d; --accent-ink:#ffffff; --head:#123f30; --head-ink:#eef6f1;
+  --kur:#2c6fb7; --hem:#d27d1f; --koko:#7b52b8;
+  --hi:#b93a2c; --hi-bg:#fbe6e2; --lo:#3d6f8e; --lo-bg:#e2eef5; --ok:#22744f; --ok-bg:#e0f1e8;
+  --track:#e8ede9;
+  --display:"Bricolage Grotesque","Plus Jakarta Sans",system-ui,sans-serif;
+  --body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1714; --surface:#17221d; --ink:#e6efe9; --muted:#9bada3; --line:#2b3a33;
+  --accent:#4fb98c; --accent-ink:#08130e; --head:#0c2a20; --head-ink:#e6efe9;
+  --kur:#6aa6e6; --hem:#eba24d; --koko:#ad8be0;
+  --hi:#f08a7c; --hi-bg:#44201b; --lo:#8cc0de; --lo-bg:#1b3442; --ok:#72cfa2; --ok-bg:#173527;
+  --track:#22302a; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f1714; --surface:#17221d; --ink:#e6efe9; --muted:#9bada3; --line:#2b3a33;
+  --accent:#4fb98c; --accent-ink:#08130e; --head:#0c2a20; --head-ink:#e6efe9;
+  --kur:#6aa6e6; --hem:#eba24d; --koko:#ad8be0;
+  --hi:#f08a7c; --hi-bg:#44201b; --lo:#8cc0de; --lo-bg:#1b3442; --ok:#72cfa2; --ok-bg:#173527;
+  --track:#22302a; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--head);color:var(--head-ink)}
+header .wrap{padding-block:18px 0;display:flex;flex-direction:column;gap:14px}
+.brand{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+h1{font-family:var(--display);font-size:1.7rem;line-height:1.1;margin:0;letter-spacing:-.01em}
+h1 b{font-weight:700;color:#ffd27a}
+.sub{opacity:.8;font-size:.9rem}
+nav{display:flex;gap:2px;overflow-x:auto}
+nav a{color:var(--head-ink);text-decoration:none;padding:9px 14px;border-radius:8px 8px 0 0;font-weight:600;font-size:.92rem;white-space:nowrap;opacity:.75}
+nav a:hover{opacity:1}
+nav a[aria-current="page"]{background:var(--bg);color:var(--ink);opacity:1}
+main.wrap{padding-block:22px 48px;display:flex;flex-direction:column;gap:20px}
+h2{font-family:var(--display);font-size:1.25rem;margin:0;text-wrap:balance}
+h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0;font-weight:700}
+p{margin:0}
+a{color:var(--accent)}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+.num{font-variant-numeric:tabular-nums}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.notice{border:1px dashed var(--hem);border-radius:10px;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.headrow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+
+/* angka ringkas */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.facts div{padding:12px 14px;min-width:0;box-shadow:1px 0 0 var(--line),0 1px 0 var(--line)}
+.facts dt{font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
+.facts dd{margin:2px 0 0;font-family:var(--display);font-size:1.45rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.facts dd small{display:block;font-family:var(--body);font-size:.8rem;font-weight:500;color:var(--muted);overflow-wrap:anywhere}
+dl{margin:0}
+
+/* carta */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.84rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+.sw.kur,.seg.kur{background:var(--kur)} .sw.hem,.seg.hem{background:var(--hem)} .sw.koko,.seg.koko{background:var(--koko)}
+.sw.avg{width:2px;height:13px;border-radius:0;background:var(--ink)}
+.chart{display:flex;flex-direction:column;gap:9px}
+.crow{display:grid;grid-template-columns:minmax(0,11rem) minmax(0,1fr) 3.2rem 5.6rem;gap:10px;align-items:center}
+.crow .nm{overflow-wrap:anywhere;font-weight:600;font-size:.92rem}
+.track{position:relative;height:18px;background:var(--track);border-radius:4px;display:flex}
+.seg{height:100%;display:block}
+.seg:first-child{border-radius:4px 0 0 4px}
+.seg + .seg{box-shadow:-1px 0 0 var(--surface)}
+.avgl{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.75}
+.tot{text-align:right;font-weight:700}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.76rem;font-weight:700;white-space:nowrap}
+.pill.hi{background:var(--hi-bg);color:var(--hi)} .pill.lo{background:var(--lo-bg);color:var(--lo)} .pill.ok{background:var(--ok-bg);color:var(--ok)}
+@media (max-width:620px){
+  .crow{grid-template-columns:minmax(0,1fr) 3.2rem 5.6rem}
+  .crow .nm{grid-column:1/-1;margin-bottom:-6px}
+}
+
+/* borang & butang */
+form.add,.addrow{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:.78rem;font-weight:600;color:var(--muted);min-width:0}
+label.f.grow{flex:1 1 180px}
+textarea{width:100%;resize:vertical}
+.ptab{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:7px}
+.ptab table{border-collapse:collapse;width:100%;font-size:.9rem}
+.ptab td,.ptab th{padding:5px 10px;text-align:left;border-bottom:1px solid var(--line)}
+.ptab td:last-child,.ptab th:last-child{text-align:right}
+#pPratonton{display:flex;flex-direction:column;gap:10px}
+#pPratonton:empty{display:none}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:7px 9px;min-width:0;max-width:100%}
+input[type=number]{width:5.5rem}
+input.bare{background:transparent;border-color:transparent;padding:5px 6px;width:100%}
+input.bare:hover:not(:disabled){border-color:var(--line)}
+input:disabled,select:disabled{opacity:.75}
+button{font:inherit;font-weight:600;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 13px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+.btnlink{display:inline-block;font-weight:600;border-radius:7px;padding:7px 13px;background:var(--accent);color:var(--accent-ink);text-decoration:none;white-space:nowrap}
+button.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.danger{color:var(--hi)}
+button.x{padding:1px 8px;line-height:1.4;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+body.ro .w{display:none!important}
+
+/* senarai guru */
+.glist{display:flex;flex-direction:column}
+.gitem{border-top:1px solid var(--line)}
+.gitem:first-child{border-top:0}
+.ghead{width:100%;display:grid;grid-template-columns:minmax(0,1fr) repeat(4,3.4rem) 5.6rem;gap:8px;align-items:center;text-align:left;border:0;background:transparent;border-radius:0;padding:10px 4px}
+.ghead:hover{background:var(--bg)}
+.ghead .nm{font-weight:600;overflow-wrap:anywhere}
+.ghead span.c{text-align:right;font-variant-numeric:tabular-nums}
+.gcols{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,3.4rem) 5.6rem;gap:8px;padding:0 4px 6px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.gcols span{text-align:right}.gcols span:first-child{text-align:left}.gcols span:last-child{text-align:left}
+.gbody{padding:6px 4px 18px;display:flex;flex-direction:column;gap:14px}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.tl li{display:flex;gap:8px;align-items:center;min-width:0}
+.tl li .t{flex:1;min-width:0;overflow-wrap:anywhere}
+@media (max-width:620px){
+  .ghead,.gcols{grid-template-columns:minmax(0,1fr) 3.2rem 5.6rem}
+  .ghead .u,.gcols .u{display:none}
+}
+
+/* katalog */
+.cat{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;align-items:start}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) 4.4rem auto;gap:6px;align-items:center}
+.trow input[type=number]{width:100%}
+.hold{font-size:.8rem;color:var(--muted);padding:0 6px 6px;overflow-wrap:anywhere}
+.unit-h{display:flex;align-items:center;gap:8px}
+
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-weight:600;font-size:.9rem;max-width:calc(100% - 32px);z-index:20}
+ol.how{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:4px;max-width:65ch}
+</style>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <h1>e<b>SKBBD</b> TASK</h1>
+      <span class="sub" id="sekolahLbl">Sistem Pemberatan Tugas Guru</span>
+      <span class="sub num" id="langsung" hidden></span>
+    </div>
+    <nav id="nav">
+      <a href="#ringkasan">Ringkasan</a>
+      <a href="#guru">Guru &amp; Agihan</a>
+      <a href="#tugas">Katalog Tugas</a>
+      <a href="#tetapan">Tetapan</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="pinBar" data-dyn hidden></div>
+  <div id="status" class="muted">Memuatkan data…</div>
+  <div id="contohBar" data-dyn hidden></div>
+
+  <section id="v-ringkasan" data-dyn hidden></section>
+
+  <section id="v-guru" hidden>
+    <div class="panel w">
+      <h2>Tambah guru</h2>
+      <form class="add" id="fGuru">
+        <label class="f grow" for="gNama">Nama guru<input id="gNama" required maxlength="80" placeholder="cth. Pn. Aminah binti Ali"></label>
+        <label class="f" for="gWaktu">Waktu mengajar / minggu<input id="gWaktu" type="number" min="0" max="60" step="1" value="24"></label>
+        <button class="pri" type="submit">Tambah guru</button>
+      </form>
+    </div>
+    <div class="panel w" style="margin-top:20px">
+      <h2>Tambah guru secara pukal dari Excel</h2>
+      <p class="muted small">Sediakan dua lajur: nama guru, kemudian waktu mengajar seminggu (jika kosong, 24 digunakan). Lajur bilangan di hadapan dan baris tajuk dilangkau secara automatik.</p>
+      <label class="f" for="pFail">Muat naik fail Excel (.xlsx, .xls atau .csv)<input id="pFail" type="file" accept=".xlsx,.xls,.csv"></label>
+      <label class="f" for="pTeks">Atau salin sel dari Excel dan tampal di sini<textarea id="pTeks" rows="4" placeholder="Pn. Aminah binti Ali&#9;24&#10;En. Rahman bin Osman&#9;26"></textarea></label>
+      <div><button id="pSemak" type="button">Semak senarai</button></div>
+      <div id="pPratonton"></div>
+    </div>
+    <div id="guruDyn" data-dyn style="margin-top:20px"></div>
+  </section>
+
+  <section id="v-tugas" hidden>
+    <div class="panel w">
+      <h2>Tambah tugas ke katalog</h2>
+      <form class="add" id="fTugas">
+        <label class="f grow" for="tNama">Nama tugas / jawatan<input id="tNama" required maxlength="80" placeholder="cth. Penyelaras Program NILAM"></label>
+        <label class="f" for="tUnit">Unit<select id="tUnit"><option value="kur">Kurikulum</option><option value="hem">HEM</option><option value="koko">Kokurikulum</option></select></label>
+        <label class="f" for="tP">Pemberat (mata)<input id="tP" type="number" min="0" max="50" step="0.5" value="3"></label>
+        <button class="pri" type="submit">Tambah tugas</button>
+      </form>
+    </div>
+    <div id="tugasDyn" data-dyn style="margin-top:20px"></div>
+  </section>
+
+  <section id="v-tetapan" hidden>
+    <div class="panel">
+      <h2>Tetapan kiraan</h2>
+      <form class="add" id="fTetapan">
+        <label class="f grow" for="sSekolah">Nama sekolah<input id="sSekolah" maxlength="80" placeholder="cth. SK Bandar Baru …"></label>
+        <label class="f" for="sMata">Mata bagi setiap waktu mengajar<input id="sMata" type="number" min="0" max="5" step="0.1"></label>
+        <label class="f" for="sJulat">Julat seimbang (± % daripada purata)<input id="sJulat" type="number" min="5" max="80" step="5"></label>
+        <button class="pri w" type="submit">Simpan tetapan</button>
+      </form>
+    </div>
+    <div class="panel" style="margin-top:20px">
+      <h2>Cara mata dikira</h2>
+      <ol class="how">
+        <li><strong>Kurikulum</strong> = (waktu mengajar seminggu × mata setiap waktu) + pemberat semua tugas kurikulum yang dipegang.</li>
+        <li><strong>HEM</strong> dan <strong>Kokurikulum</strong> = jumlah pemberat tugas yang dipegang dalam unit itu.</li>
+        <li><strong>Jumlah mata</strong> = Kurikulum + HEM + Kokurikulum.</li>
+        <li>Guru ditanda <strong>Tinggi</strong> jika jumlahnya melebihi purata sekolah lebih daripada julat seimbang, <strong>Rendah</strong> jika kurang daripadanya, dan <strong>Seimbang</strong> jika di antara kedua-duanya.</li>
+      </ol>
+      <p class="muted small">Nilai pemberat ialah keputusan pengurusan sekolah. Ubah pemberat di tab Katalog Tugas mengikut persetujuan mesyuarat.</p>
+    </div>
+  </section>
+</main>
+<div id="toast" hidden role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const UNIT={kur:'Kurikulum',hem:'HEM',koko:'Kokurikulum'};
+const S={db:null,guru:new Map(),tugas:new Map(),agihan:new Map(),
+  tetapan:{sekolah:'',mataWaktu:0.5,julat:25},got:0,open:null,sah:null,draft:{},ro:false,tetapanDirty:false};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>String(Math.round(n*10)/10);
+const unitOf=t=>UNIT[t.unit]?t.unit:'kur';
+
+function kira(){
+  const mw=+S.tetapan.mataWaktu||0;
+  const rows=[...S.guru].map(([id,g])=>({id,nama:g.nama||'(tanpa nama)',waktu:+g.waktu||0,contoh:!!g.contoh,
+    kur:(+g.waktu||0)*mw,hem:0,koko:0,tugas:[]}));
+  const by=new Map(rows.map(r=>[r.id,r]));
+  for(const [aid,a] of S.agihan){
+    const r=by.get(a.guruId),t=S.tugas.get(a.tugasId); if(!r||!t) continue;
+    const p=+t.pemberat||0,u=unitOf(t); r[u]+=p;
+    r.tugas.push({aid,nama:t.nama||'',unit:u,p,catatan:a.catatan||''});
+  }
+  let sum=0; rows.forEach(r=>{r.jumlah=r.kur+r.hem+r.koko;sum+=r.jumlah});
+  const purata=rows.length?sum/rows.length:0, j=(+S.tetapan.julat||25)/100;
+  rows.forEach(r=>{r.st=!purata?'ok':r.jumlah>purata*(1+j)?'hi':r.jumlah<purata*(1-j)?'lo':'ok'});
+  return {rows,purata};
+}
+const ST={hi:'Tinggi',lo:'Rendah',ok:'Seimbang'};
+const pill=st=>`<span class="pill ${st}">${ST[st]}</span>`;
+
+/* ---------- paparan ---------- */
+function renderRingkasan(k){
+  const el=$('v-ringkasan');
+  if(!k.rows.length){
+    el.innerHTML=`<div class="panel"><h2>Belum ada guru</h2><p class="muted">Carta agihan beban tugas setiap guru akan dipaparkan di sini. Mula dengan menambah guru di tab <a href="#guru">Guru &amp; Agihan</a>.</p></div>`;return}
+  const rows=[...k.rows].sort((a,b)=>b.jumlah-a.jumlah);
+  const max=Math.max(rows[0].jumlah,k.purata,1), top=rows[0], bot=rows[rows.length-1];
+  const nHi=rows.filter(r=>r.st==='hi').length, nLo=rows.filter(r=>r.st==='lo').length;
+  const seg=(r,u)=>r[u]>0?`<span class="seg ${u}" style="width:${r[u]/max*100}%" title="${UNIT[u]}: ${fmt(r[u])} mata"></span>`:'';
+  el.innerHTML=`
+  <dl class="facts">
+    <div><dt>Bilangan guru</dt><dd>${rows.length}</dd></div>
+    <div><dt>Purata mata</dt><dd>${fmt(k.purata)}</dd></div>
+    <div><dt>Tertinggi</dt><dd>${fmt(top.jumlah)}<small>${esc(top.nama)}</small></dd></div>
+    <div><dt>Terendah</dt><dd>${fmt(bot.jumlah)}<small>${esc(bot.nama)}</small></dd></div>
+    <div><dt>Di luar julat seimbang</dt><dd>${nHi+nLo}<small>${nHi} tinggi · ${nLo} rendah</small></dd></div>
+  </dl>
+  <div class="panel" style="margin-top:20px">
+    <div class="headrow"><h2>Beban tugas setiap guru</h2><button data-act="salin">Salin jadual untuk Excel</button></div>
+    <div class="legend"><span><i class="sw kur"></i>Kurikulum (termasuk waktu mengajar)</span><span><i class="sw hem"></i>HEM</span><span><i class="sw koko"></i>Kokurikulum</span><span><i class="sw avg"></i>Purata sekolah (${fmt(k.purata)})</span></div>
+    <div class="chart">${rows.map(r=>`
+      <div class="crow"><span class="nm">${esc(r.nama)}</span>
+        <div class="track">${seg(r,'kur')}${seg(r,'hem')}${seg(r,'koko')}<i class="avgl" style="left:calc(${k.purata/max*100}% - 1px)"></i></div>
+        <span class="tot num">${fmt(r.jumlah)}</span>${pill(r.st)}</div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function tugasOptions(sel){
+  const g={kur:[],hem:[],koko:[]};
+  for(const [id,t] of S.tugas) g[unitOf(t)].push([id,t]);
+  return '<option value="">Pilih tugas…</option>'+Object.keys(UNIT).map(u=>g[u].length?`<optgroup label="${UNIT[u]}">${
+    g[u].sort((a,b)=>(a[1].nama||'').localeCompare(b[1].nama||'')).map(([id,t])=>`<option value="${esc(id)}"${id===sel?' selected':''}>${esc(t.nama)} (${fmt(+t.pemberat||0)})</option>`).join('')}</optgroup>`:'').join('');
+}
+function renderGuru(k){
+  const el=$('guruDyn'), dis=S.ro?'disabled':'';
+  if(!k.rows.length){el.innerHTML=`<div class="panel"><p class="muted">Tiada guru lagi. Guru yang ditambah akan disenaraikan di sini bersama mata Kurikulum, HEM dan Kokurikulum masing-masing.</p></div>`;return}
+  const rows=[...k.rows].sort((a,b)=>a.nama.localeCompare(b.nama));
+  el.innerHTML=`<div class="panel"><div class="headrow"><h2>Senarai guru (${rows.length})</h2><span class="muted small">Tekan nama guru untuk mengagihkan tugas</span></div>
+  <div><div class="gcols"><span>Nama</span><span class="u">Kur</span><span class="u">HEM</span><span class="u">Koko</span><span>Jumlah</span><span>Status</span></div>
+  <div class="glist">${rows.map(r=>{
+    const open=S.open===r.id, d=S.draft[r.id]||{};
+    let body='';
+    if(open){
+      const grp=u=>{const ts=r.tugas.filter(t=>t.unit===u);return `<div><div class="unit-h"><i class="sw ${u}"></i><h3>${UNIT[u]} · ${fmt(r[u])} mata</h3></div>
+        <ul class="tl" style="margin-top:6px">${u==='kur'?`<li><span class="t">Waktu mengajar: ${r.waktu} waktu × ${fmt(+S.tetapan.mataWaktu||0)}</span><span class="num">${fmt(r.kur-ts.reduce((s,t)=>s+t.p,0))}</span></li>`:''}
+        ${ts.map(t=>`<li><span class="t">${esc(t.nama)}${t.catatan?` <span class="muted">— ${esc(t.catatan)}</span>`:''}</span><span class="num">${fmt(t.p)}</span><button class="x w" data-act="buang" data-id="${esc(t.aid)}" aria-label="Buang tugas ${esc(t.nama)}">✕</button></li>`).join('')}
+        ${!ts.length&&u!=='kur'?'<li class="muted small">Tiada tugas</li>':''}</ul></div>`};
+      body=`<div class="gbody">
+        <div class="addrow">
+          <label class="f grow">Nama<input data-chg="gnama" data-id="${esc(r.id)}" value="${esc(r.nama)}" maxlength="80" ${dis}></label>
+          <label class="f">Waktu mengajar / minggu<input type="number" min="0" max="60" data-chg="gwaktu" data-id="${esc(r.id)}" value="${r.waktu}" ${dis}></label>
+        </div>
+        ${grp('kur')}${grp('hem')}${grp('koko')}
+        <div class="addrow w">
+          <label class="f grow">Tambah tugas<select data-draft="tugasId" data-id="${esc(r.id)}">${tugasOptions(d.tugasId)}</select></label>
+          <label class="f grow">Catatan (pilihan)<input data-draft="catatan" data-id="${esc(r.id)}" value="${esc(d.catatan||'')}" maxlength="60" placeholder="cth. Bahasa Melayu / 5 Bestari"></label>
+          <button class="pri" data-act="agih" data-id="${esc(r.id)}">Agihkan</button>
+        </div>
+        <div class="w">${S.sah==='guru:'+r.id
+          ?`<button class="danger" data-act="padam-guru-ya" data-id="${esc(r.id)}">Sahkan padam ${esc(r.nama)}</button> <button data-act="batal">Batal</button>`
+          :`<button class="danger" data-act="padam-guru" data-id="${esc(r.id)}">Padam guru</button>`}</div>
+      </div>`;
+    }
+    return `<div class="gitem"><button class="ghead" data-act="buka" data-id="${esc(r.id)}" aria-expanded="${open}">
+      <span class="nm">${open?'▾':'▸'} ${esc(r.nama)}</span><span class="c u">${fmt(r.kur)}</span><span class="c u">${fmt(r.hem)}</span><span class="c u">${fmt(r.koko)}</span><span class="c"><strong>${fmt(r.jumlah)}</strong></span>${pill(r.st)}</button>${body}</div>`}).join('')}
+  </div></div></div>`;
+}
+
+function renderTugas(k){
+  const el=$('tugasDyn'), dis=S.ro?'disabled':'';
+  const hold=new Map();
+  k.rows.forEach(r=>r.tugas.forEach(t=>{const a=S.agihan.get(t.aid);if(!a)return;(hold.get(a.tugasId)||hold.set(a.tugasId,[]).get(a.tugasId)).push(r.nama+(t.catatan?` (${t.catatan})`:''))}));
+  const col=u=>{
+    const ts=[...S.tugas].filter(([,t])=>unitOf(t)===u).sort((a,b)=>(+b[1].pemberat||0)-(+a[1].pemberat||0)||(a[1].nama||'').localeCompare(b[1].nama||''));
+    return `<div class="panel"><div class="unit-h"><i class="sw ${u}"></i><h2>${UNIT[u]}</h2><span class="muted small">${ts.length} tugas</span></div>
+    <div>${ts.length?ts.map(([id,t])=>{const h=hold.get(id)||[];return `
+      <div class="trow"><input class="bare" data-chg="tnama" data-id="${esc(id)}" value="${esc(t.nama)}" maxlength="80" aria-label="Nama tugas" ${dis}>
+      <input type="number" min="0" max="50" step="0.5" data-chg="tp" data-id="${esc(id)}" value="${+t.pemberat||0}" aria-label="Pemberat ${esc(t.nama)}" ${dis}>
+      ${S.sah==='tugas:'+id?`<button class="x danger w" data-act="padam-tugas-ya" data-id="${esc(id)}">Sahkan</button>`:`<button class="x w" data-act="padam-tugas" data-id="${esc(id)}" aria-label="Padam ${esc(t.nama)}">✕</button>`}</div>
+      <div class="hold">${h.length?esc(h.join(', ')):'Belum diagihkan'}</div>`}).join(''):'<p class="muted small">Tiada tugas dalam unit ini. Tambah menggunakan borang di atas.</p>'}</div></div>`};
+  el.innerHTML=`<div class="cat">${col('kur')}${col('hem')}${col('koko')}</div>`;
+}
+
+function renderContoh(k){
+  const el=$('contohBar'), n=k.rows.filter(r=>r.contoh).length;
+  el.hidden=!n; if(!n) return;
+  el.innerHTML=`<div class="notice"><span><strong>Data contoh.</strong> ${n} guru di bawah ialah contoh untuk menunjukkan cara sistem berfungsi, bukan guru sebenar.</span>
+    <span class="w">${S.sah==='contoh'?`<button class="danger" data-act="padam-contoh-ya">Sahkan padam guru contoh</button> <button data-act="batal">Batal</button>`:`<button data-act="padam-contoh">Padam guru contoh</button>`}</span></div>`;
+}
+
+function view(){const h=location.hash.slice(1);return ['ringkasan','guru','tugas','tetapan'].includes(h)?h:'ringkasan'}
+function render(){
+  const v=view();
+  for(const n of ['ringkasan','guru','tugas','tetapan']) $('v-'+n).hidden=n!==v;
+  document.querySelectorAll('#nav a').forEach(a=>a.getAttribute('href')==='#'+v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+  document.body.classList.toggle('ro',S.ro);
+  renderPin();
+  $('sekolahLbl').textContent='Sistem Pemberatan Tugas Guru'+(S.tetapan.sekolah?' · '+S.tetapan.sekolah:'');
+  const k=kira();
+  renderContoh(k);
+  if(v==='ringkasan') renderRingkasan(k);
+  if(v==='guru') renderGuru(k);
+  if(v==='tugas') renderTugas(k);
+  if(!S.tetapanDirty){$('sSekolah').value=S.tetapan.sekolah||'';$('sMata').value=S.tetapan.mataWaktu;$('sJulat').value=S.tetapan.julat}
+}
+let pending=false,dirty=false;
+function jadual(){
+  if(pending) return; pending=true;
+  requestAnimationFrame(()=>{pending=false;
+    const a=document.activeElement;
+    if(a&&/INPUT|SELECT/.test(a.tagName)&&a.closest('[data-dyn]')){dirty=true;return}
+    dirty=false;render()});
+}
+document.addEventListener('focusout',()=>{if(dirty) setTimeout(jadual,0)});
+window.addEventListener('hashchange',()=>{S.sah=null;render();window.scrollTo(0,0)});
+
+/* ---------- tindakan ---------- */
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3800)}
+async function tulis(fn,ok){
+  if(!S.db){toast('Data tidak dapat dicapai sekarang.');return false}
+  try{await fn();if(ok)toast(ok);return true}
+  catch(e){const c=e&&e.code;
+    toast(c==='invalid_argument'?'Tidak dapat menyimpan. Anda mungkin hanya ada akses lihat sahaja.':c==='quota_exceeded'?'Storan penuh. Padam rekod lama dahulu.':'Gagal menyimpan. Cuba sekali lagi.');return false}
+}
+const C=n=>S.db.collection(n);
+async function padamAgihan(pred){for(const [aid,a] of [...S.agihan]) if(pred(a)) await C('agihan').doc(aid).delete()}
+
+$('fGuru').addEventListener('submit',async e=>{e.preventDefault();
+  const nama=$('gNama').value.trim(); if(!nama) return;
+  if(await tulis(()=>C('guru').add({nama,waktu:Math.max(0,+$('gWaktu').value||0)}),'Guru ditambah')){$('gNama').value='';$('gNama').focus()}});
+$('fTugas').addEventListener('submit',async e=>{e.preventDefault();
+  const nama=$('tNama').value.trim(); if(!nama) return;
+  if(await tulis(()=>C('tugas').add({nama,unit:$('tUnit').value,pemberat:Math.max(0,+$('tP').value||0)}),'Tugas ditambah')) $('tNama').value=''});
+$('fTetapan').addEventListener('input',()=>S.tetapanDirty=true);
+$('fTetapan').addEventListener('submit',async e=>{e.preventDefault();
+  const t={sekolah:$('sSekolah').value.trim(),mataWaktu:Math.max(0,+$('sMata').value||0),julat:Math.min(80,Math.max(5,+$('sJulat').value||25))};
+  if(await tulis(()=>S.db.doc('tetapan/utama').set(t),'Tetapan disimpan')) S.tetapanDirty=false});
+
+document.addEventListener('input',e=>{const el=e.target.closest('[data-draft]');if(!el)return;
+  (S.draft[el.dataset.id]||(S.draft[el.dataset.id]={}))[el.dataset.draft]=el.value});
+document.addEventListener('change',e=>{const el=e.target.closest('[data-chg]');if(!el)return;
+  const id=el.dataset.id,k=el.dataset.chg,v=el.value.trim();
+  if(k==='gnama'&&v) tulis(()=>C('guru').doc(id).update({nama:v}));
+  if(k==='gwaktu') tulis(()=>C('guru').doc(id).update({waktu:Math.max(0,+v||0)}));
+  if(k==='tnama'&&v) tulis(()=>C('tugas').doc(id).update({nama:v}));
+  if(k==='tp') tulis(()=>C('tugas').doc(id).update({pemberat:Math.max(0,+v||0)}));
+});
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-act]');if(!b)return;
+  const act=b.dataset.act,id=b.dataset.id;
+  if(act==='buka'){S.open=S.open===id?null:id;S.sah=null;render()}
+  else if(act==='batal'){S.sah=null;render()}
+  else if(act==='padam-guru'){S.sah='guru:'+id;render()}
+  else if(act==='padam-tugas'){S.sah='tugas:'+id;render()}
+  else if(act==='padam-contoh'){S.sah='contoh';render()}
+  else if(act==='agih'){const d=S.draft[id]||{};
+    if(!d.tugasId||!S.tugas.has(d.tugasId)){toast('Pilih tugas dahulu.');return}
+    const cat=(d.catatan||'').trim();
+    if([...S.agihan.values()].some(a=>a.guruId===id&&a.tugasId===d.tugasId&&(a.catatan||'')===cat)){toast('Tugas ini sudah diagihkan kepada guru ini.');return}
+    if(await tulis(()=>C('agihan').add({guruId:id,tugasId:d.tugasId,catatan:cat}),'Tugas diagihkan')){delete S.draft[id];jadual()}}
+  else if(act==='buang') tulis(()=>C('agihan').doc(id).delete());
+  else if(act==='padam-guru-ya'){S.sah=null;S.open=null;
+    tulis(async()=>{await padamAgihan(a=>a.guruId===id);await C('guru').doc(id).delete()},'Guru dipadam')}
+  else if(act==='padam-tugas-ya'){S.sah=null;
+    tulis(async()=>{await padamAgihan(a=>a.tugasId===id);await C('tugas').doc(id).delete()},'Tugas dipadam')}
+  else if(act==='padam-contoh-ya'){S.sah=null;
+    const ids=new Set([...S.guru].filter(([,g])=>g.contoh).map(([i])=>i));
+    tulis(async()=>{await padamAgihan(a=>ids.has(a.guruId));for(const i of ids) await C('guru').doc(i).delete()},'Guru contoh dipadam')}
+  else if(act==='salin'){
+    const k=kira(),rows=[...k.rows].sort((a,b)=>b.jumlah-a.jumlah);
+    const txt=['Nama\tWaktu mengajar\tKurikulum\tHEM\tKokurikulum\tJumlah\tStatus\tSenarai tugas',
+      ...rows.map(r=>[r.nama,r.waktu,fmt(r.kur),fmt(r.hem),fmt(r.koko),fmt(r.jumlah),ST[r.st],r.tugas.map(t=>t.nama+(t.catatan?` (${t.catatan})`:'')).join('; ')].join('\t'))].join('\n');
+    try{await navigator.clipboard.writeText(txt);toast('Jadual disalin. Tampal ke Excel atau Google Sheets.')}
+    catch(_){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+      let ok=false;try{ok=document.execCommand('copy')}catch(_){}ta.remove();toast(ok?'Jadual disalin. Tampal ke Excel atau Google Sheets.':'Tidak dapat menyalin di paparan ini.')}
+  }
+});
+
+/* ---------- tambah pukal ---------- */
+function susun(rows){
+  const ada=new Set([...S.guru.values()].map(g=>(g.nama||'').trim().toLowerCase()));
+  const senarai=[];let ulang=0;
+  for(const r of rows){
+    let c=(Array.isArray(r)?r:[r]).map(x=>String(x??'').trim());
+    if((c[0]===''||/^\d+\.?$/.test(c[0]))&&c[1]&&isNaN(+c[1])) c=c.slice(1);
+    const nama=(c[0]||'').slice(0,80);
+    if(!nama||/^(bil\.?|no\.?|nama( guru)?|name)$/i.test(nama)) continue;
+    const k=nama.toLowerCase(); if(ada.has(k)){ulang++;continue} ada.add(k);
+    const n=parseFloat(c[1]);
+    senarai.push({nama,waktu:isFinite(n)&&n>=0&&n<=60?n:24});
+  }
+  return {senarai:senarai.slice(0,300),ulang,lebih:Math.max(0,senarai.length-300)};
+}
+function pratonton(msg){
+  const el=$('pPratonton'),P=S.pukal;
+  if(!P){el.innerHTML=msg?`<p class="muted">${esc(msg)}</p>`:'';return}
+  const L=P.senarai;
+  el.innerHTML=`<p><strong>${L.length} guru sedia ditambah.</strong>${P.ulang?` ${P.ulang} nama dilangkau kerana sudah ada atau berulang.`:''}${P.lebih?` ${P.lebih} baris melebihi had 300 dan tidak dimasukkan.`:''}</p>
+  <div class="ptab"><table><thead><tr><th>Nama guru</th><th>Waktu / minggu</th></tr></thead><tbody>${L.map(g=>`<tr><td>${esc(g.nama)}</td><td class="num">${g.waktu}</td></tr>`).join('')}</tbody></table></div>
+  <div><button class="pri" id="pTambah" type="button">Tambah ${L.length} guru</button> <button id="pBatal" type="button">Batal</button></div>`;
+}
+function semak(rows){
+  const P=susun(rows);
+  if(!P.senarai.length){S.pukal=null;pratonton(P.ulang?'Semua nama dalam senarai ini sudah ada dalam sistem.':'Tiada nama guru ditemui. Pastikan nama berada di lajur pertama.');return}
+  S.pukal=P;pratonton();
+}
+$('pFail').addEventListener('change',async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  if(!window.XLSX){pratonton('Pembaca Excel tidak dapat dimuatkan. Guna kaedah salin dan tampal di bawah.');return}
+  try{const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+    semak(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,blankrows:false,defval:''}))}
+  catch(_){S.pukal=null;pratonton('Fail ini tidak dapat dibaca. Pastikan ia fail Excel atau CSV, atau guna kaedah salin dan tampal.')}
+});
+$('pSemak').addEventListener('click',()=>{
+  const t=$('pTeks').value; if(!t.trim()){pratonton('Tampal senarai dari Excel dahulu, atau pilih fail.');return}
+  const sep=t.includes('\t')?'\t':t.includes(';')?';':',';
+  semak(t.split(/\r?\n/).map(l=>l.split(sep)));
+});
+$('pPratonton').addEventListener('click',async e=>{
+  if(e.target.id==='pBatal'){S.pukal=null;$('pFail').value='';pratonton();return}
+  if(e.target.id!=='pTambah'||!S.pukal) return;
+  if(!S.db){toast('Data tidak dapat dicapai sekarang.');return}
+  const L=S.pukal.senarai,btn=e.target;btn.disabled=true;$('pBatal').disabled=true;let n=0;
+  try{const G=C('guru');
+    if(G.addMany){btn.textContent='Menambah…';await G.addMany(L.map(g=>({nama:g.nama,waktu:g.waktu})));n=L.length}
+    else for(const g of L){await G.add({nama:g.nama,waktu:g.waktu});n++;btn.textContent=`Menambah ${n}/${L.length}…`}}
+  catch(_){S.pukal={senarai:L.slice(n),ulang:0,lebih:0};pratonton();
+    toast(n?`${n} guru ditambah, kemudian terhenti. Tekan butang sekali lagi untuk menyambung.`:'Tidak dapat menyimpan. Anda mungkin hanya ada akses lihat sahaja.');return}
+  S.pukal=null;$('pFail').value='';$('pTeks').value='';pratonton();toast(`${n} guru ditambah`);
+});
+
+/* ---------- data ---------- */
+const KATALOG=[['kur','Setiausaha Kurikulum',8],['kur','Setiausaha Peperiksaan',8],['kur','Penyelaras Jadual Waktu',7],['kur','Ketua Panitia',6],['kur','Penyelaras PBD',6],['kur','Penyelaras Pusat Sumber',5],['kur','Penyelaras ICT / Bestari',5],['kur','Penyelaras Program Kecemerlangan',5],['kur','Setiausaha Panitia',3],['kur','AJK Kurikulum',2],
+['hem','Setiausaha HEM',8],['hem','Ketua Guru Disiplin',7],['hem','Guru Kelas',6],['hem','Penyelaras SPBT',6],['hem','Penyelaras APDM',6],['hem','Penyelaras RMT dan Kantin',5],['hem','Penyelaras Kesihatan dan 3K',5],['hem','Penyelaras Bantuan dan Biasiswa',5],['hem','Penyelaras PPDa',4],['hem','AJK HEM',2],
+['koko','Setiausaha Kokurikulum',8],['koko','Setiausaha Sukan',7],['koko','Penyelaras PAJSK',6],['koko','Ketua Penasihat Unit Beruniform',5],['koko','Ketua Rumah Sukan',5],['koko','Ketua Penasihat Kelab / Persatuan',4],['koko','Ketua Penasihat Sukan / Permainan',4],['koko','Jurulatih Pasukan Sekolah',4],['koko','Guru Penasihat (ahli)',2],['koko','Guru Rumah Sukan',2]];
+/* Simpanan pada pelayar ini: digunakan apabila simpanan dikongsi tidak tersedia. */
+const URL_DIKONGSI='https://script.google.com/macros/s/AKfycbzUNJkRfIM4JxFhrt39zj9VCm-GFZU0jAzmdkqZEI4D1byQ7c5n90EbsAccqX6G4fB5/exec';
+function dbTempatan(){
+  const KEY='eskbbd-task-v1';let D=null;
+  try{D=JSON.parse(localStorage.getItem(KEY))}catch(_){}
+  if(!D||!D.tugas||!D.guru||!D.agihan){D={guru:{},tugas:{},agihan:{},tetapan:{}};KATALOG.forEach(([u,nama,p],i)=>D.tugas['t'+String(i).padStart(2,'0')]={nama,unit:u,pemberat:p})}
+  D.tetapan=D.tetapan||{};
+  const subs={};
+  const simpan=n=>{try{localStorage.setItem(KEY,JSON.stringify(D))}catch(_){}(subs[n]||[]).forEach(f=>f())};
+  const langgan=(n,g)=>{(subs[n]=subs[n]||[]).push(g);setTimeout(g,0)};
+  const ref=(n,id)=>({id,
+    set:async d=>{D[n][id]=d;simpan(n)},
+    update:async d=>{if(!D[n][id])throw{code:'invalid_argument'};D[n][id]={...D[n][id],...d};simpan(n)},
+    delete:async()=>{delete D[n][id];simpan(n)},
+    onSnapshot:f=>langgan(n,()=>f({exists:!!D[n][id],data:()=>D[n][id]}))});
+  return {doc:path=>{const [n,id]=path.split('/');return ref(n,id)},
+    collection:n=>({doc:id=>ref(n,id),
+      add:async d=>{D[n]['l'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)]=d;simpan(n)},
+      onSnapshot:f=>langgan(n,()=>f({docs:Object.entries(D[n]).map(([id,d])=>({id,data:()=>d})),metadata:{fromCache:false}}))})};
+}
+/* ---------- Google Sheet melalui Apps Script ----------
+   API_URL: pautan Web App Apps Script (berakhir dengan /exec). Diperlukan apabila halaman dihoskan di luar Google (cth. Vercel). */
+const API_URL='https://script.google.com/macros/s/AKfycbzUNJkRfIM4JxFhrt39zj9VCm-GFZU0jAzmdkqZEI4D1byQ7c5n90EbsAccqX6G4fB5/exec';
+function pengangkutan(){
+  if(window.google&&google.script&&google.script.run)
+    return (fn,...a)=>new Promise((res,rej)=>google.script.run.withSuccessHandler(res)
+      .withFailureHandler(e=>rej(new Error(String(e&&e.message||e))))[fn](...a));
+  if(API_URL)
+    return async(fn,...a)=>{
+      let r;
+      if(fn==='getAll'||fn==='versi') r=await fetch(API_URL+'?api='+fn+'&t='+Date.now());
+      else{const pin=a.pop();r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args:a,pin})})}
+      const j=await r.json();if(!j.ok) throw new Error(j.error||'Ralat pelayan');return j.data};
+  return null;
+}
+const PIN_KEY='eskbbd-pin';
+function pinSimpan(v){S.pin=v;try{v?localStorage.setItem(PIN_KEY,v):localStorage.removeItem(PIN_KEY)}catch(_){}}
+try{S.pin=localStorage.getItem(PIN_KEY)||''}catch(_){S.pin=''}
+S.perluPin=false;S.pinOk=false;
+function kemasRo(){S.ro=S.perluPin&&!S.pinOk}
+function dbSheet(run){
+  const kod=e=>{const m=String(e&&e.message||e);
+    if(m.includes('TIADA_KEBENARAN')){S.pinOk=false;pinSimpan('');kemasRo();jadual();return {code:'invalid_argument',message:m}}
+    if(m.includes('TERKUNCI')) return {code:'resource_exhausted',message:m};
+    return {code:'unavailable',message:m}};
+  let D={guru:{},tugas:{},agihan:{},tetapan:{}},sibuk=0,ver=0,sedia=false,sv;const subs=[];
+  const tanda=ok=>{const el=$('langsung');el.hidden=false;el.textContent=ok?'● Langsung · dikemas kini '+new Date().toLocaleTimeString('ms-MY'):'○ Sambungan terputus, mencuba semula…'};
+  const siar=()=>{if(sedia) subs.forEach(f=>f())};
+  const muat=async()=>{const v=ver,r=await run('getAll');if(v!==ver||sibuk) return;
+    D=r.data;sv=r.versi;S.perluPin=!!r.perluPin;if(!S.perluPin) S.pinOk=true;kemasRo();sedia=true;siar();tanda(true)};
+  const semak=async()=>{let v=null;try{v=await run('versi')}catch(_){}
+    try{if(v===null||v!==sv) await muat(); else tanda(true)}catch(e){tanda(false);throw e}};
+  const hantar=async(fn,...a)=>{sibuk++;ver++;siar();
+    try{await run(fn,...a,S.pin||'')}catch(e){sibuk--;ver++;try{await muat()}catch(_){}throw kod(e)}sibuk--};
+  const nid=()=>'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const ref=(n,id)=>({id,
+    set:d=>{D[n][id]=d;return hantar('simpan',n,id,d)},
+    update:d=>{if(!D[n][id])return Promise.reject({code:'unavailable'});D[n][id]={...D[n][id],...d};return hantar('simpan',n,id,D[n][id])},
+    delete:()=>{delete D[n][id];return hantar('padam',n,id)},
+    onSnapshot:f=>{subs.push(()=>f({exists:!!D[n][id],data:()=>D[n][id]}))}});
+  return {muat,semak,sibuk:()=>sibuk,
+    semakPin:async pin=>{try{await run('semakPin',pin)}catch(e){throw kod(e)}},
+    doc:path=>{const [n,id]=path.split('/');return ref(n,id)},
+    collection:n=>({doc:id=>ref(n,id),
+      add:d=>ref(n,nid()).set(d),
+      addMany:list=>{const rows=list.map(d=>({id:nid(),data:d}));rows.forEach(r=>D[n][r.id]=r.data);return hantar('tambahBanyak',n,rows)},
+      onSnapshot:f=>{subs.push(()=>f({docs:Object.entries(D[n]||{}).map(([id,d])=>({id,data:()=>d})),metadata:{fromCache:false}}))}})};
+}
+let pinKey='';
+function renderPin(){
+  const el=$('pinBar'),k=!S.perluPin?'':S.pinOk?'ok':'no';
+  if(k===pinKey) return; pinKey=k; el.hidden=!k;
+  el.innerHTML=k==='no'
+    ?`<div class="notice"><span><strong>Mod lihat sahaja.</strong> Penyelaras boleh masukkan PIN untuk menambah dan mengubah data.</span>
+       <form id="fPin" class="add"><input id="pinIn" type="password" autocomplete="current-password" placeholder="PIN penyelaras" aria-label="PIN penyelaras" maxlength="40" style="width:11rem"><button class="pri" type="submit">Masuk</button></form></div>`
+    :k==='ok'?`<p class="muted small">Anda log masuk sebagai penyelaras. <button class="x" id="pinOut" type="button">Log keluar</button></p>`:'';
+}
+document.addEventListener('submit',async e=>{
+  if(e.target.id!=='fPin') return; e.preventDefault();
+  const v=$('pinIn').value.trim(); if(!v||!S.db||!S.db.semakPin) return;
+  try{await S.db.semakPin(v);pinSimpan(v);S.pinOk=true;kemasRo();render();toast('Log masuk berjaya')}
+  catch(err){toast(err&&err.code==='resource_exhausted'?'Terlalu banyak cubaan salah. Cuba lagi selepas 10 minit.':err&&err.code==='invalid_argument'?'PIN salah.':'Tidak dapat menyemak PIN. Cuba lagi.')}
+});
+document.addEventListener('click',e=>{if(e.target.id!=='pinOut')return;pinSimpan('');S.pinOk=false;kemasRo();render();toast('Anda telah log keluar')});
+function mula(){
+  render();
+  const st=$('status');
+  const lambat=setTimeout(()=>{st.hidden=false;st.textContent='Data belum dapat dicapai. Halaman akan terus mencuba.'},10000);
+  const sambung=(db,tempatan)=>{
+    S.db=db;
+    if(tempatan){clearTimeout(lambat);st.hidden=false;st.className='notice';
+      st.innerHTML='<span><strong>Ini salinan percubaan.</strong> Data di sini disimpan pada peranti ini sahaja dan tidak kelihatan kepada orang lain. Untuk data langsung yang dikongsi dengan semua guru, guna pautan Google Sheet sekolah.</span><a class="btnlink" href="'+URL_DIKONGSI+'" target="_blank" rel="noopener">Buka sistem dikongsi ↗</a>'}
+    const gagal=()=>{clearTimeout(lambat);st.hidden=false;st.textContent='Data tidak dapat dimuatkan dalam paparan ini.'};
+    const sub=name=>db.collection(name).onSnapshot(snap=>{
+      const m=new Map();snap.docs.forEach(d=>m.set(d.id,d.data()||{}));S[name]=m;
+      if(!tempatan&&!snap.metadata.fromCache){clearTimeout(lambat);st.hidden=true} jadual()},gagal);
+    sub('guru');sub('tugas');sub('agihan');
+    db.doc('tetapan/utama').onSnapshot(s=>{if(s.exists){const d=s.data();
+      S.tetapan={sekolah:d.sekolah||'',mataWaktu:d.mataWaktu??0.5,julat:d.julat||25}}jadual()},()=>{});
+  };
+  const run=pengangkutan();
+  if(run){
+    const db=dbSheet(run);sambung(db,false);
+    db.muat().then(async()=>{
+      if(S.perluPin&&S.pin){try{await db.semakPin(S.pin);S.pinOk=true}catch(_){S.pinOk=false;pinSimpan('')}kemasRo();render()}
+    }).catch(e=>{clearTimeout(lambat);st.hidden=false;
+      st.textContent='Data Google Sheet tidak dapat dimuatkan. '+(API_URL&&!window.google?'Pastikan Web App Apps Script diterbitkan dengan akses "Anyone" dan pautan API_URL betul.':(e&&e.message||''))});
+    const kemas=()=>{if(!db.sibuk()&&!document.hidden) db.semak().catch(()=>{})};
+    setInterval(kemas,10000);document.addEventListener('visibilitychange',kemas);window.addEventListener('focus',kemas);
+    return}
+  if(!window.claude||!window.claude.use){sambung(dbTempatan(),true);return}
+  window.claude.use('user').then(async u=>{if(!u)return;try{if(await u.can('data.write')===false&&S.db&&!S.tempatan){S.ro=true;jadual()}}catch(_){}}).catch(()=>{});
+  window.claude.use('db').then(db=>{if(db) sambung(db,false); else {S.tempatan=true;S.ro=false;sambung(dbTempatan(),true);jadual()}},
+    ()=>{S.tempatan=true;sambung(dbTempatan(),true)});
+}
+mula();
+</script>
+
+</body>
+</html>
